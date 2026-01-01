@@ -1,1 +1,2 @@
-curl -sSL https://raw.githubusercontent.com/Ericsson/ove/master/setup | bash -s boston <add-fetch-URL-here>
+curl -sSL https://raw.githubusercontent.com/Ericsson/ove/master/setup | bash -s boston git@github.com:waldeck-lab/boston_ove.git
+
