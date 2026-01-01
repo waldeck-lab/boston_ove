@@ -7,10 +7,9 @@ This tutorial will hopefully give you an basic idea what OVE is about. If you ar
 ## Part I: Set up the OVE workspace
 
 Run the oneliner:
+    curl -sSL https://raw.githubusercontent.com/Ericsson/ove/master/setup | bash -s ~/repo/ove-workspace/boston git@github.com:waldeck-lab/boston_ove.git
 
-    curl -sSL https://raw.githubusercontent.com/Ericsson/ove/master/setup | bash -s ove-workspace https://github.com/Ericsson/ove-tutorial
-
-'ove-workspace' will be the name of your OVE workspace. You can use multiple workspaces to keep states of different tasks for the same or different projects.
+'boston' will be the name of your OVE workspace. You can use multiple workspaces to keep states of different tasks for the same or different projects.
 
 
 For the interested, the above oneliner runs the code in the snippet below. PLEASE NOTE: Do not manually run them, they are only there to shine light over the oneliner you have already executed. Most people do not really have to care about what the setup script is doing so let us skip below code snippet and move on!
