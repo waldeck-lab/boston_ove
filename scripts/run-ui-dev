@@ -1,0 +1,51 @@
+#!/usr/bin/env sh
+set -e
+
+fail() { echo "ERROR: $*" >&2; exit 1; }
+say()  { echo "$*" >&2; }
+
+# ---- Verify OVE_BASE_DIR ----
+[ -n "${OVE_BASE_DIR:-}" ] || fail "OVE_BASE_DIR is not set."
+[ -d "$OVE_BASE_DIR" ] || fail "OVE_BASE_DIR is not a directory: $OVE_BASE_DIR"
+
+UI_DIR="$OVE_BASE_DIR/boston_geomap/geomap-ui"
+
+# ---- Verify project layout ----
+[ -d "$UI_DIR" ] || fail "UI directory not found: $UI_DIR"
+[ -f "$UI_DIR/package.json" ] || fail "Missing package.json in: $UI_DIR"
+
+# ---- Verify Node/npm ----
+command -v node >/dev/null 2>&1 || fail "node not found in PATH."
+command -v npm  >/dev/null 2>&1 || fail "npm not found in PATH."
+
+NODE_VER="$(node -v 2>/dev/null || true)"
+NPM_VER="$(npm -v 2>/dev/null || true)"
+say "Using node=$NODE_VER npm=$NPM_VER"
+
+NODE_MAJ="$(printf "%s" "$NODE_VER" | sed -n 's/^v\([0-9][0-9]*\).*/\1/p')"
+[ "$NODE_MAJ" -ge 24 ] || fail "Node >= 24 required, found: $NODE_VER"
+
+# ---- Go to UI dir ----
+cd "$UI_DIR" || fail "Could not cd into: $UI_DIR"
+
+# ---- Install deps (dev-friendly) ----
+if [ ! -d node_modules ]; then
+  say "node_modules missing → running npm install"
+  npm install
+else
+  say "node_modules present → skipping npm install"
+fi
+
+# ---- Start dev server ----
+say "Starting Vite dev server…"
+say "URL will be shown below (Ctrl+C to stop)"
+
+# Allow override via env:
+#   UI_DEV_HOST=0.0.0.0 UI_DEV_PORT=5173 run-ui-dev
+HOST_ARG=""
+PORT_ARG=""
+
+[ -n "${UI_DEV_HOST:-}" ] && HOST_ARG="--host $UI_DEV_HOST"
+[ -n "${UI_DEV_PORT:-}" ] && PORT_ARG="--port $UI_DEV_PORT"
+
+exec npm run dev -- $HOST_ARG $PORT_ARG

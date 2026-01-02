@@ -1,0 +1,49 @@
+#!/usr/bin/env sh
+
+
+# run-ui
+
+set -e
+
+fail() { echo "ERROR: $*" >&2; exit 1; }
+say()  { echo "$*" >&2; }
+
+# ---- Verify OVE_BASE_DIR ----
+[ -n "${OVE_BASE_DIR:-}" ] || fail "OVE_BASE_DIR is not set."
+[ -d "$OVE_BASE_DIR" ] || fail "OVE_BASE_DIR is not a directory: $OVE_BASE_DIR"
+
+UI_DIR="$OVE_BASE_DIR/boston_geomap/geomap-ui"
+
+# ---- Verify project layout ----
+[ -d "$UI_DIR" ] || fail "UI directory not found: $UI_DIR"
+[ -f "$UI_DIR/package.json" ] || fail "Missing package.json in: $UI_DIR"
+[ -f "$UI_DIR/package-lock.json" ] || fail "Missing package-lock.json in: $UI_DIR (required for 'npm ci')."
+
+# Optional but helpful checks
+[ -f "$UI_DIR/vite.config.ts" ] || [ -f "$UI_DIR/vite.config.js" ] || say "WARN: No vite.config.(ts|js) found (may be OK)."
+[ -d "$UI_DIR/src" ] || fail "Missing src/ directory in: $UI_DIR"
+
+# ---- Verify Node/npm ----
+command -v node >/dev/null 2>&1 || fail "node not found in PATH."
+command -v npm  >/dev/null 2>&1 || fail "npm not found in PATH."
+
+NODE_VER="$(node -v 2>/dev/null || true)"
+NPM_VER="$(npm -v 2>/dev/null || true)"
+say "Using node=$NODE_VER npm=$NPM_VER"
+
+# If you want a hard requirement for Node 24+
+# (node -v prints v24.x.y)
+NODE_MAJ="$(printf "%s" "$NODE_VER" | sed -n 's/^v\([0-9][0-9]*\).*/\1/p')"
+[ -n "$NODE_MAJ" ] || fail "Could not parse Node version: $NODE_VER"
+[ "$NODE_MAJ" -ge 24 ] || fail "Node >= 24 required, found: $NODE_VER"
+
+# ---- Run ----
+cd "$UI_DIR" || fail "Could not cd into: $UI_DIR"
+
+say "Running: npm ci"
+npm ci
+
+say "Running: npm run build"
+npm run build
+
+say "UI build OK."

@@ -7,6 +7,14 @@ crossmatch:
 
 counts:
 
+ui:
+  deps:
+    base
+  path:
+  version:
+  tags:
+    tool
+
 # base:
 #   needs_debian:
 #     build-essential

@@ -1,0 +1,56 @@
+#!/usr/bin/env sh
+
+#!/usr/bin/env sh
+set -e
+
+fail() { echo "ERROR: $*" >&2; exit 1; }
+say()  { echo "$*" >&2; }
+
+# Required env
+[ -n "${OVE_BASE_DIR:-}" ] || fail "OVE_BASE_DIR is not set."
+[ -d "$OVE_BASE_DIR" ] || fail "OVE_BASE_DIR is not a directory: $OVE_BASE_DIR"
+
+[ -n "${OVE_OWEL_DIR:-}" ] || fail "OVE_OWEL_DIR is not set."
+[ -d "$OVE_OWEL_DIR" ] || fail "OVE_OWEL_DIR is not a directory: $OVE_OWEL_DIR"
+
+SRC="$OVE_OWEL_DIR/scripts/run-ui"
+BIN_DIR="$OVE_BASE_DIR/stage/usr/bin"
+LINK="$BIN_DIR/run-ui"
+
+# 1) Verify source (production)
+[ -f "$SRC" ] || fail "Source run-ui not found: $SRC"
+[ -r "$SRC" ] || fail "Source run-ui not readable: $SRC"
+
+# Ensure destination dir exists
+mkdir -p "$BIN_DIR" || fail "Could not create bin dir: $BIN_DIR"
+
+# Create/replace symlink (force)
+ln -sf "$SRC" "$LINK" || fail "Failed to create symlink: $LINK -> $SRC"
+
+# Sanity check
+[ -L "$LINK" ] || fail "Symlink was not created: $LINK"
+
+say "OK: installed run-ui on PATH:"
+say "  $LINK -> $SRC"
+say "Try: run-ui  (or: ove run <proj> run-ui)"
+
+
+ln -sf "$OVE_OWEL_DIR/scripts/run-ui-dev" "$OVE_BASE_DIR/stage/usr/bin/run-ui-dev"
+
+# 2) Verify source (development)
+SRC="$OVE_OWEL_DIR/scripts/run-ui-dev"
+LINK="$BIN_DIR/run-ui-dev"
+[ -f "$SRC" ] || fail "Source run-ui-dev not found: $SRC"
+[ -r "$SRC" ] || fail "Source run-ui-dev not readable: $SRC"
+# Create/replace symlink (force)
+ln -sf "$SRC" "$LINK" || fail "Failed to create symlink: $LINK -> $SRC"
+
+# Sanity check
+[ -L "$LINK" ] || fail "Symlink was not created: $LINK"
+
+say "OK: installed run-ui-dev on PATH:"
+say "  $LINK -> $SRC"
+say "Try: run-ui-dev  (or: ove run <proj> run-ui-dev)"
+
+
+
