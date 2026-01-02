@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+
+db_name="dyntaxa_lepidoptera.sqlite"
+set -e
+echo "Installing database in stage area if build pipeline is without errors"
+
+cp $OVE_BASE_DIR/stage/tmp/.viewer-db-tmp/$db_name  $OVE_BASE_DIR/stage/db/$db_name
+echo "$OVE_BASE_DIR/stage/db/$db_name"

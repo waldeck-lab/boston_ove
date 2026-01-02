@@ -1,0 +1,19 @@
+#!/usr/bin/env sh
+
+set -e
+#
+# Run the script, and temporarily store the results in a temp-folder for consolidation
+$OVE_BASE_DIR/boston_sos_observatory/scripts/sos_sync.py \
+    --db-dir $OVE_BASE_DIR/stage/tmp/.obs-db-tmp \
+    --list-dir $OVE_BASE_DIR/stage/tmp/.obs-list-tmp
+
+# sos_sync.py outputs: sos_counts.sqlite
+
+## Crossmatch
+# python scripts/crossmatch_lepidoptera.py \
+#  --dyntaxa-db "$OVE_BASE_DIR/stage/db/dyntaxa_lepidoptera.sqlite" \
+#  --sos-db "$OVE_BASE_DIR/stage/db/sos_counts.sqlite" \
+#  --out-dir "$OVE_BASE_DIR/stage/lists"
+
+## Counts
+#usage: counts.py [-h] [--db DB] [--out OUT]

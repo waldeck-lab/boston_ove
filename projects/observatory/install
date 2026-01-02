@@ -1,0 +1,21 @@
+#!/usr/bin/env sh
+
+set -e
+
+# sos_sync.py outputs: sos_counts.sqlite
+
+SRC="$OVE_BASE_DIR/stage/tmp/.obs-db-tmp/sos_counts.sqlite"
+DST="$OVE_BASE_DIR/stage/db"
+
+if [ ! -s "$SRC" ]; then
+  echo "ERROR: SOS SQLite database missing or empty:" >&2
+  echo "  $SRC" >&2
+  echo "Possible causes:" >&2
+  echo "  - sos_sync.py failed" >&2
+  echo "  - export returned no data" >&2
+  echo "  - wrong OVE_BASE_DIR" >&2
+  exit 1
+fi
+
+mkdir -p "$DST"
+cp "$SRC" "$DST/"

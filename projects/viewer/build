@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+
+db_name="dyntaxa_lepidoptera.sqlite"
+
+set -e
+
+#
+# Run the script, and temporarily store the results in a temp-folder for consolidation
+$OVE_BASE_DIR/boston_viewer/scripts/create_refresh_list.py --db $OVE_BASE_DIR/stage/tmp/.viewer-db-tmp/$db_name --tmp-dir $OVE_BASE_DIR/stage/cache/.viewer-cache-tmp/

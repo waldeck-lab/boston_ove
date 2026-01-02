@@ -1,0 +1,38 @@
+#!/usr/bin/env sh
+set -e
+
+fail() { echo "ERROR: $*" >&2; exit 1; }
+
+# Verify OVE_BASE_DIR
+[ -n "${OVE_BASE_DIR:-}" ] || fail "OVE_BASE_DIR is not set."
+[ -d "$OVE_BASE_DIR" ] || fail "OVE_BASE_DIR does not exist or is not a directory: $OVE_BASE_DIR"
+
+SCRIPT="$OVE_BASE_DIR/boston_sos_observatory/scripts/crossmatch_lepidoptera.py"
+DYNTAXA_DB="$OVE_BASE_DIR/stage/db/dyntaxa_lepidoptera.sqlite"
+SOS_DB="$OVE_BASE_DIR/stage/db/sos_counts.sqlite"
+OUT_DIR_TMP="$OVE_BASE_DIR/stage/tmp/.lists-tmp"
+
+# Verify script
+[ -f "$SCRIPT" ] || fail "Crossmatch script not found: $SCRIPT"
+[ -r "$SCRIPT" ] || fail "Crossmatch script not readable: $SCRIPT"
+
+# If it's not executable, run via python3 explicitly
+if [ -x "$SCRIPT" ]; then
+  RUN="$SCRIPT"
+else
+  command -v python3 >/dev/null 2>&1 || fail "python3 not found in PATH (script is not executable)."
+  RUN="python3 $SCRIPT"
+fi
+
+# Verify inputs
+[ -s "$DYNTAXA_DB" ] || fail "Dyntaxa DB missing or empty: $DYNTAXA_DB"
+[ -s "$SOS_DB" ] || fail "SOS DB missing or empty: $SOS_DB"
+
+# Ensure output dir exists
+mkdir -p "$OUT_DIR_TMP" || fail "Could not create output dir: $OUT_DIR_TMP"
+
+# Run
+exec $RUN \
+  --dyntaxa-db "$DYNTAXA_DB" \
+  --sos-db "$SOS_DB" \
+  --out-dir "$OUT_DIR_TMP"

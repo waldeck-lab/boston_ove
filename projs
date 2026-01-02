@@ -1,29 +1,37 @@
 ---
-base:
-  needs_debian:
-    build-essential
-    pkg-config
-  needs_alpine:
-    build-base
-    pkgconf
-    shadow-login
-  needs_void:
-    base-devel
-    pkg-config
-  needs_arch:
-    base-devel
-    pkgconfig
-  needs_fedora:
-    g++
-    gcc
-    pkgconfig
+viewer:
 
-foobar:
-  deps:
-    base
-  path:
-    foobar
-  version:
-    0.1.0
-  tags:
-    tool
+observatory:
+
+crossmatch:
+
+count:
+
+# base:
+#   needs_debian:
+#     build-essential
+#     pkg-config
+#   needs_alpine:
+#     build-base
+#     pkgconf
+#     shadow-login
+#   needs_void:
+#     base-devel
+#     pkg-config
+#   needs_arch:
+#     base-devel
+#     pkgconfig
+#   needs_fedora:
+#     g++
+#     gcc
+#     pkgconfig
+
+# foobar:
+#   deps:
+#     base
+#   path:
+#     foobar
+#   version:
+#     0.1.0
+#   tags:
+#     tool
