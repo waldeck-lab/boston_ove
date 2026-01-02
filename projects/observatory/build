@@ -1,19 +1,44 @@
+# observatory build
+
 #!/usr/bin/env sh
-
 set -e
-#
-# Run the script, and temporarily store the results in a temp-folder for consolidation
-$OVE_BASE_DIR/boston_sos_observatory/scripts/sos_sync.py \
-    --db-dir $OVE_BASE_DIR/stage/tmp/.obs-db-tmp \
-    --list-dir $OVE_BASE_DIR/stage/tmp/.obs-list-tmp
 
-# sos_sync.py outputs: sos_counts.sqlite
+. "$OVE_OWEL_DIR/scripts/stage_lib.sh"
+debug_on
 
-## Crossmatch
-# python scripts/crossmatch_lepidoptera.py \
-#  --dyntaxa-db "$OVE_BASE_DIR/stage/db/dyntaxa_lepidoptera.sqlite" \
-#  --sos-db "$OVE_BASE_DIR/stage/db/sos_counts.sqlite" \
-#  --out-dir "$OVE_BASE_DIR/stage/lists"
+require_env_dir OVE_BASE_DIR
 
-## Counts
-#usage: counts.py [-h] [--db DB] [--out OUT]
+SCRIPT="$OVE_BASE_DIR/boston_sos_observatory/scripts/sos_sync.py"
+
+DB_TMP_DIR="$OVE_BASE_DIR/stage/tmp/.obs-db-tmp"
+LIST_TMP_DIR="$OVE_BASE_DIR/stage/tmp/.obs-list-tmp"
+
+DB_TMP_PATH="$DB_TMP_DIR/sos_counts.sqlite"
+
+say "Observatory build: script=$SCRIPT"
+say "Observatory build: db_tmp_dir=$DB_TMP_DIR"
+say "Observatory build: list_tmp_dir=$LIST_TMP_DIR"
+
+require_file_readable "$SCRIPT" "sos_sync script"
+
+# Ensure output dirs exist and are clean for this run
+ensure_dir "$DB_TMP_DIR"
+ensure_dir "$LIST_TMP_DIR"
+
+# Avoid mixing old artifacts with new ones
+rm -f "$DB_TMP_PATH" 2>/dev/null || true
+clean_glob "$LIST_TMP_DIR" "*.csv"
+
+# Run (python_run handles executable vs python3)
+python_run "$SCRIPT" \
+  --db-dir "$DB_TMP_DIR" \
+  --list-dir "$LIST_TMP_DIR"
+
+# Validate expected outputs
+require_file_nonempty "$DB_TMP_PATH" "SOS sqlite output"
+
+# Optional: lists are not always produced; if you expect them, enforce it:
+# require_at_least_one_file "$LIST_TMP_DIR" "*.csv" "SOS list outputs"
+# require_no_empty_files "$LIST_TMP_DIR" "*.csv" "SOS list outputs"
+
+say "Observatory build OK: $DB_TMP_PATH"

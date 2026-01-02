@@ -12,6 +12,13 @@ Run the oneliner:
 
 'boston' will be the name of your OVE workspace. You can use multiple workspaces to keep states of different tasks for the same or different projects.
 
+Bootstrap (create stage area)
+
+    $ cd ove-workspace
+    $ source ove
+    $ ove stage init
+    $ echo $OVE_BASE_DIR/stage # access to list and db folders
+
 
 For the interested, the above oneliner runs the code in the snippet below. PLEASE NOTE: Do not manually run them, they are only there to shine light over the oneliner you have already executed. Most people do not really have to care about what the setup script is doing so let us skip below code snippet and move on!
 

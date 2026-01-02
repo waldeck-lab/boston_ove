@@ -1,21 +1,26 @@
-#!/usr/bin/env sh
+# obsevatory install
 
+#!/usr/bin/env sh
 set -e
 
-# sos_sync.py outputs: sos_counts.sqlite
+. "$OVE_OWEL_DIR/scripts/stage_lib.sh"
+debug_on
 
-SRC="$OVE_BASE_DIR/stage/tmp/.obs-db-tmp/sos_counts.sqlite"
-DST="$OVE_BASE_DIR/stage/db"
+require_env_dir OVE_BASE_DIR
 
-if [ ! -s "$SRC" ]; then
-  echo "ERROR: SOS SQLite database missing or empty:" >&2
-  echo "  $SRC" >&2
-  echo "Possible causes:" >&2
-  echo "  - sos_sync.py failed" >&2
-  echo "  - export returned no data" >&2
-  echo "  - wrong OVE_BASE_DIR" >&2
-  exit 1
-fi
+SRC_DB="$OVE_BASE_DIR/stage/tmp/.obs-db-tmp/sos_counts.sqlite"
+DST_DIR="$OVE_BASE_DIR/stage/db"
+DST_DB="$DST_DIR/sos_counts.sqlite"
 
-mkdir -p "$DST"
-cp "$SRC" "$DST/"
+say "Observatory install: src_db=$SRC_DB"
+say "Observatory install: dst_db=$DST_DB"
+
+require_file_nonempty "$SRC_DB" "SOS sqlite source DB"
+ensure_dir "$DST_DIR"
+
+# Atomic-ish publish: copy to temp and then rename into place
+TMP_DB="$DST_DIR/.sos_counts.sqlite.new.$$"
+run "Copy DB to staging" cp "$SRC_DB" "$TMP_DB"
+run "Publish DB" mv "$TMP_DB" "$DST_DB"
+
+say "Observatory install OK: $DST_DB"

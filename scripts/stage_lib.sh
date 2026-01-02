@@ -4,6 +4,27 @@
 fail() { echo "ERROR: $*" >&2; exit 1; }
 warn() { echo "WARN:  $*" >&2; }
 
+say() { echo "$*" >&2; }
+
+debug_on() {
+  # Enable with: STAGE_DEBUG=1 ./script.sh
+  if [ "${STAGE_DEBUG:-0}" = "1" ]; then
+    set -x
+  fi
+}
+
+run() {
+  # run "description" cmd arg...
+  desc="$1"; shift
+  set +e
+  "$@"
+  rc=$?
+  set -e
+  if [ $rc -ne 0 ]; then
+    fail "$desc (exit $rc): $*"
+  fi
+}
+
 require_env_dir() {
   # require_env_dir VAR
   var="$1"
@@ -38,22 +59,23 @@ clean_glob() {
   rm -f "$d"/$pat 2>/dev/null || true
 }
 
-python_run() {
-  # python_run SCRIPT [args...]
-  script="$1"; shift
-  require_file_readable "$script" "script"
-  if [ -x "$script" ]; then
-    "$script" "$@"
-  else
-    command -v python3 >/dev/null 2>&1 || fail "python3 not found in PATH (script not executable): $script"
-    python3 "$script" "$@"
-  fi
-}
 
 count_files() {
   # count_files DIR GLOB
   d="$1"; g="$2"
   find "$d" -maxdepth 1 -type f -name "$g" 2>/dev/null | wc -l | tr -d ' '
+}
+
+
+python_run() {
+  script="$1"; shift
+  require_file_readable "$script" "script"
+  if [ -x "$script" ]; then
+    run "Running $script" "$script" "$@"
+  else
+    command -v python3 >/dev/null 2>&1 || fail "python3 not found in PATH (script not executable): $script"
+    run "Running python3 $script" python3 "$script" "$@"
+  fi
 }
 
 require_at_least_one_file() {

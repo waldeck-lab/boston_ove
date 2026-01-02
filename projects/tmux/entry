@@ -1,4 +1,0 @@
-#!/usr/bin/env bash
-
-set -e
-${OVE_STAGE_DIR}/usr/bin/tmux -V

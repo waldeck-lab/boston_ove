@@ -1,0 +1,4 @@
+# Bash executable for setting up intial stage area 
+mkdir -p "$OVE_BASE_DIR/stage"
+mkdir -p "$OVE_BASE_DIR/stage/db"
+mkdir -p "$OVE_BASE_DIR/stage/lists"

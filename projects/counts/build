@@ -1,38 +1,25 @@
 #!/usr/bin/env sh
 set -e
 
-fail() { echo "ERROR: $*" >&2; exit 1; }
+. "$OVE_OWEL_DIR/scripts/stage_lib.sh"
+debug_on
 
-# Verify OVE_BASE_DIR
-[ -n "${OVE_BASE_DIR:-}" ] || fail "OVE_BASE_DIR is not set."
-[ -d "$OVE_BASE_DIR" ] || fail "OVE_BASE_DIR is not a directory: $OVE_BASE_DIR"
+require_env_dir OVE_BASE_DIR
 
 SCRIPT="$OVE_BASE_DIR/boston_sos_observatory/scripts/counts.py"
 SOS_DB="$OVE_BASE_DIR/stage/db/sos_counts.sqlite"
 OUT_DIR_TMP="$OVE_BASE_DIR/stage/tmp/.counts-tmp"
 OUT_CSV="$OUT_DIR_TMP/taxa_counts.csv"
 
-# Verify inputs
-[ -f "$SCRIPT" ] || fail "Counts script not found: $SCRIPT"
-[ -r "$SCRIPT" ] || fail "Counts script not readable: $SCRIPT"
-[ -s "$SOS_DB" ] || fail "SOS DB missing or empty: $SOS_DB"
+say "Counts build: script=$SCRIPT"
+say "Counts build: db=$SOS_DB"
+say "Counts build: out=$OUT_CSV"
 
-# Ensure tmp output dir exists and is clean for this run
-mkdir -p "$OUT_DIR_TMP" || fail "Could not create tmp output dir: $OUT_DIR_TMP"
-rm -f "$OUT_DIR_TMP"/*.csv 2>/dev/null || true
+require_file_nonempty "$SOS_DB" "SOS DB"
+ensure_dir "$OUT_DIR_TMP"
+clean_glob "$OUT_DIR_TMP" "*.csv"
 
-# Determine how to run the script
-if [ -x "$SCRIPT" ]; then
-  RUN="$SCRIPT"
-else
-  command -v python3 >/dev/null 2>&1 || fail "python3 not found in PATH (counts.py is not executable)."
-  RUN="python3 $SCRIPT"
-fi
+python_run "$SCRIPT" --db "$SOS_DB" --out "$OUT_CSV"
+require_file_nonempty "$OUT_CSV" "counts output CSV"
 
-# Run counts export
-$RUN --db "$SOS_DB" --out "$OUT_CSV"
-
-# Validate output
-[ -s "$OUT_CSV" ] || fail "Expected output CSV missing or empty: $OUT_CSV"
-
-echo "Counts build OK: $OUT_CSV"
+say "Counts build OK: $OUT_CSV"

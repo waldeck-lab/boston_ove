@@ -5,7 +5,7 @@ observatory:
 
 crossmatch:
 
-count:
+counts:
 
 # base:
 #   needs_debian:

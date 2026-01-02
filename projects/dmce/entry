@@ -1,8 +1,0 @@
-#!/usr/bin/env bash
-
-set -e
-
-export OVE_LOCAL_ECHO=1
-ove test dmce
-ove fetch ag
-ove dmce-trace-lazy ag

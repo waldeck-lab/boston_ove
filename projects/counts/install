@@ -1,39 +1,17 @@
 #!/usr/bin/env sh
 set -e
 
-fail() { echo "ERROR: $*" >&2; exit 1; }
+. "$OVE_OWEL_DIR/scripts/stage_lib.sh"
+debug_on
 
-# Verify OVE_BASE_DIR
-[ -n "${OVE_BASE_DIR:-}" ] || fail "OVE_BASE_DIR is not set."
-[ -d "$OVE_BASE_DIR" ] || fail "OVE_BASE_DIR is not a directory: $OVE_BASE_DIR"
+require_env_dir OVE_BASE_DIR
 
 SRC_DIR="$OVE_BASE_DIR/stage/tmp/.counts-tmp"
 DST_DIR="$OVE_BASE_DIR/stage/lists"
 
-# Verify source exists and has CSVs
-[ -d "$SRC_DIR" ] || fail "Source tmp dir not found: $SRC_DIR"
+say "Counts install: src=$SRC_DIR"
+say "Counts install: dst=$DST_DIR"
 
-CSV_COUNT="$(find "$SRC_DIR" -maxdepth 1 -type f -name '*.csv' 2>/dev/null | wc -l | tr -d ' ')"
-[ "$CSV_COUNT" -gt 0 ] || fail "No CSV files found to publish in: $SRC_DIR"
+publish_csv_dir "$SRC_DIR" "$DST_DIR" "taxa_counts.csv"
 
-EMPTY_COUNT="$(find "$SRC_DIR" -maxdepth 1 -type f -name '*.csv' -size 0 2>/dev/null | wc -l | tr -d ' ')"
-[ "$EMPTY_COUNT" -eq 0 ] || fail "One or more CSV files are empty in: $SRC_DIR"
-
-mkdir -p "$DST_DIR" || fail "Could not create destination dir: $DST_DIR"
-
-# Publish to a staging dir under destination, then move into place
-PUBLISH_TMP="$DST_DIR/.publish_counts.$$"
-mkdir -p "$PUBLISH_TMP" || fail "Could not create publish temp dir: $PUBLISH_TMP"
-
-find "$SRC_DIR" -maxdepth 1 -type f -name '*.csv' -print0 \
-  | xargs -0 -I {} cp "{}" "$PUBLISH_TMP/"
-
-# Replace only the counts output(s). If you standardize filenames, you can target them.
-# Example: taxa_counts.csv
-rm -f "$DST_DIR"/taxa_counts.csv 2>/dev/null || true
-
-# Move published files in
-mv "$PUBLISH_TMP"/*.csv "$DST_DIR/" || fail "Failed to move published CSVs into: $DST_DIR"
-rmdir "$PUBLISH_TMP" 2>/dev/null || true
-
-echo "Counts install OK: published $CSV_COUNT CSV file(s) from $SRC_DIR -> $DST_DIR"
+say "Counts install OK: $DST_DIR/taxa_counts.csv"

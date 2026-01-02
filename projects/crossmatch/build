@@ -1,38 +1,37 @@
+# crossmatch build
+
 #!/usr/bin/env sh
 set -e
 
-fail() { echo "ERROR: $*" >&2; exit 1; }
+. "$OVE_OWEL_DIR/scripts/stage_lib.sh"
+debug_on
 
-# Verify OVE_BASE_DIR
-[ -n "${OVE_BASE_DIR:-}" ] || fail "OVE_BASE_DIR is not set."
-[ -d "$OVE_BASE_DIR" ] || fail "OVE_BASE_DIR does not exist or is not a directory: $OVE_BASE_DIR"
+require_env_dir OVE_BASE_DIR
 
 SCRIPT="$OVE_BASE_DIR/boston_sos_observatory/scripts/crossmatch_lepidoptera.py"
 DYNTAXA_DB="$OVE_BASE_DIR/stage/db/dyntaxa_lepidoptera.sqlite"
 SOS_DB="$OVE_BASE_DIR/stage/db/sos_counts.sqlite"
 OUT_DIR_TMP="$OVE_BASE_DIR/stage/tmp/.lists-tmp"
 
-# Verify script
-[ -f "$SCRIPT" ] || fail "Crossmatch script not found: $SCRIPT"
-[ -r "$SCRIPT" ] || fail "Crossmatch script not readable: $SCRIPT"
+say "Crossmatch build: script=$SCRIPT"
+say "Crossmatch build: dyntaxa_db=$DYNTAXA_DB"
+say "Crossmatch build: sos_db=$SOS_DB"
+say "Crossmatch build: out_dir=$OUT_DIR_TMP"
 
-# If it's not executable, run via python3 explicitly
-if [ -x "$SCRIPT" ]; then
-  RUN="$SCRIPT"
-else
-  command -v python3 >/dev/null 2>&1 || fail "python3 not found in PATH (script is not executable)."
-  RUN="python3 $SCRIPT"
-fi
+require_file_readable "$SCRIPT" "Crossmatch script"
+require_file_nonempty "$DYNTAXA_DB" "Dyntaxa DB"
+require_file_nonempty "$SOS_DB" "SOS DB"
 
-# Verify inputs
-[ -s "$DYNTAXA_DB" ] || fail "Dyntaxa DB missing or empty: $DYNTAXA_DB"
-[ -s "$SOS_DB" ] || fail "SOS DB missing or empty: $SOS_DB"
+ensure_dir "$OUT_DIR_TMP"
+clean_glob "$OUT_DIR_TMP" "*.csv"
 
-# Ensure output dir exists
-mkdir -p "$OUT_DIR_TMP" || fail "Could not create output dir: $OUT_DIR_TMP"
-
-# Run
-exec $RUN \
+python_run "$SCRIPT" \
   --dyntaxa-db "$DYNTAXA_DB" \
   --sos-db "$SOS_DB" \
   --out-dir "$OUT_DIR_TMP"
+
+# Validate that the script actually produced CSVs
+require_at_least_one_file "$OUT_DIR_TMP" "*.csv" "crossmatch CSV outputs"
+require_no_empty_files "$OUT_DIR_TMP" "*.csv" "crossmatch CSV outputs"
+
+say "Crossmatch build OK: produced $(count_files "$OUT_DIR_TMP" "*.csv") CSV file(s) in $OUT_DIR_TMP"
