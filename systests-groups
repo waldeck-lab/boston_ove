@@ -2,6 +2,15 @@
 all:
   - t1
   - t2
+  
 
 sanity:
   - t1
+
+# Basic setup 
+# buildme viewer
+# buildme observatory
+# buildme geomap
+#
+#
+#

@@ -1,4 +1,52 @@
 #!/usr/bin/env sh
-
 set -e
-echo bar
+
+fail() { echo "ERROR: $*" >&2; exit 1; }
+say()  { echo "$*" >&2; }
+
+# Required env
+[ -n "${OVE_BASE_DIR:-}" ] || fail "OVE_BASE_DIR is not set."
+[ -d "$OVE_BASE_DIR" ] || fail "OVE_BASE_DIR is not a directory: $OVE_BASE_DIR"
+
+[ -n "${OVE_OWEL_DIR:-}" ] || fail "OVE_OWEL_DIR is not set."
+[ -d "$OVE_OWEL_DIR" ] || fail "OVE_OWEL_DIR is not a directory: $OVE_OWEL_DIR"
+
+# Source scripts live here (repo-local)
+SCRIPTS_DIR="$OVE_BASE_DIR/boston_geomap/scripts"
+[ -d "$SCRIPTS_DIR" ] || fail "Scripts dir not found: $SCRIPTS_DIR"
+
+# Destination bin dir (on PATH inside OVE)
+BIN_DIR="$OVE_BASE_DIR/stage/usr/bin"
+mkdir -p "$BIN_DIR" || fail "Could not create bin dir: $BIN_DIR"
+
+# Scripts to expose on PATH (explicit list, avoids logs/vendor)
+TOOLS="
+build_hotmap
+clean_derived
+export_hotmap
+fetch_layers
+rank_nearby
+run_geomap_pipeline
+"
+
+installed=0
+
+for t in $TOOLS; do
+  SRC="$SCRIPTS_DIR/$t.py"
+  LINK="$BIN_DIR/$t"
+
+  [ -f "$SRC" ] || fail "Missing script: $SRC"
+  [ -r "$SRC" ] || fail "Script not readable: $SRC"
+
+  # Optional: ensure it has a python shebang (nice sanity check)
+  head -n 1 "$SRC" | grep -q '^#!.*python' || fail "Script has no python shebang: $SRC"
+
+  ln -sf "$SRC" "$LINK" || fail "Failed to create symlink: $LINK -> $SRC"
+  [ -L "$LINK" ] || fail "Symlink was not created: $LINK"
+
+  say "OK: $LINK -> $SRC"
+  installed=$((installed + 1))
+done
+
+say "Installed $installed geomap tool(s) on PATH."
+say "Try: run_geomap_pipeline --help  (or: ove run <proj> run_geomap_pipeline)"
