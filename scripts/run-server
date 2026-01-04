@@ -1,0 +1,66 @@
+#!/usr/bin/env sh
+set -e
+
+fail() { echo "ERROR: $*" >&2; exit 1; }
+say()  { echo "$*" >&2; }
+
+# ---- Verify OVE_BASE_DIR ----
+[ -n "${OVE_BASE_DIR:-}" ] || fail "OVE_BASE_DIR is not set."
+[ -d "$OVE_BASE_DIR" ] || fail "OVE_BASE_DIR is not a directory: $OVE_BASE_DIR"
+
+# Optional: if present, we use it as a hint for Config defaults/log placement
+STAGE_DIR="${OVE_STAGE_DIR:-$OVE_BASE_DIR/stage}"
+
+# Repo location inside workspace (as you’re using elsewhere)
+REPO_DIR="$OVE_BASE_DIR/boston_geomap"
+SERVER_DIR="$REPO_DIR/server"
+APP="$SERVER_DIR/app.py"
+
+[ -d "$REPO_DIR" ] || fail "Repo dir not found: $REPO_DIR"
+[ -d "$SERVER_DIR" ] || fail "Server dir not found: $SERVER_DIR"
+[ -f "$APP" ] || fail "Server entrypoint not found: $APP"
+
+# ---- Python ----
+command -v python3 >/dev/null 2>&1 || fail "python3 not found in PATH."
+PY="${PYTHON:-python3}"
+
+# Defaults (override via env)
+HOST="${GEOMAP_SERVER_HOST:-0.0.0.0}"
+PORT="${GEOMAP_SERVER_PORT:-8088}"
+
+# Verify the port is not in use
+if command -v ss >/dev/null 2>&1; then
+  if ss -ltn | awk '{print $4}' | grep -q ":$PORT\$"; then
+    fail "Port $PORT already in use. Set PORT=xxxx or use --port."
+  fi
+fi
+
+# Make sure Config and your new server logging land in stage
+LOGS_DIR="${GEOMAP_SERVER_LOGS_DIR:-$STAGE_DIR/logs/server}"
+DB_DIR="${GEOMAP_DB_DIR:-$STAGE_DIR/db}"
+LISTS_DIR="${GEOMAP_LISTS_DIR:-$STAGE_DIR/lists}"
+#  before printing "Starting…"
+case " $* " in
+    *" -h "*|*" --help "*)
+	exec python3 "$REPO_DIR/server/app.py" --help
+	;;
+esac
+
+say "Starting geomap server"
+say "  repo:   $REPO_DIR"
+say "  stage:  $STAGE_DIR"
+say "  host:   $HOST"
+say "  port:   $PORT"
+say "  db_dir: $DB_DIR"
+say "  lists:  $LISTS_DIR"
+say "  logs:   $LOGS_DIR"
+
+# Ensure dirs exist (non-fatal for db/lists; the server will complain nicely if missing)
+mkdir -p "$LOGS_DIR" || fail "Could not create logs dir: $LOGS_DIR"
+
+exec "$PY" "$APP" \
+  --host "$HOST" \
+  --port "$PORT" \
+  --db-dir "$DB_DIR" \
+  --lists-dir "$LISTS_DIR" \
+  --logs-dir "$LOGS_DIR"

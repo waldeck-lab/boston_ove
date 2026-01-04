@@ -1,6 +1,7 @@
 #!/usr/bin/env sh
 
-#!/usr/bin/env sh
+# ui install script (called by "ove buldme ui")
+
 set -e
 
 fail() { echo "ERROR: $*" >&2; exit 1; }
@@ -52,5 +53,16 @@ say "OK: installed run-ui-dev on PATH:"
 say "  $LINK -> $SRC"
 say "Try: run-ui-dev  (or: ove run <proj> run-ui-dev)"
 
+# 3) Verify source (server)
+SRC="$OVE_OWEL_DIR/scripts/run-server"
+LINK="$BIN_DIR/run-server"
+[ -f "$SRC" ] || fail "Source run-server not found: $SRC"
+[ -r "$SRC" ] || fail "Source run-server not readable: $SRC"
 
+ln -sf "$SRC" "$LINK" || fail "Failed to create symlink: $LINK -> $SRC"
+[ -L "$LINK" ] || fail "Symlink was not created: $LINK"
+
+say "OK: installed run-server on PATH:"
+say "  $LINK -> $SRC"
+say "Try: run-server  (or: ove run <proj> run-server)"
 

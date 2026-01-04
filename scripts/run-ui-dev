@@ -1,4 +1,6 @@
 #!/usr/bin/env sh
+# file: run-ui-dev
+
 set -e
 
 fail() { echo "ERROR: $*" >&2; exit 1; }
@@ -23,10 +25,50 @@ NPM_VER="$(npm -v 2>/dev/null || true)"
 say "Using node=$NODE_VER npm=$NPM_VER"
 
 NODE_MAJ="$(printf "%s" "$NODE_VER" | sed -n 's/^v\([0-9][0-9]*\).*/\1/p')"
+[ -n "$NODE_MAJ" ] || fail "Could not parse node version: $NODE_VER"
 [ "$NODE_MAJ" -ge 24 ] || fail "Node >= 24 required, found: $NODE_VER"
 
 # ---- Go to UI dir ----
 cd "$UI_DIR" || fail "Could not cd into: $UI_DIR"
+
+# ---- Decide API wiring ----
+# You have two good dev modes:
+#
+#   (A) Proxy mode (recommended):
+#       UI calls /api/* (API_BASE empty in UI), Vite proxies /api to backend.
+#       We still set VITE_API_BASE here so vite.config.ts can read it.
+#
+#   (B) Direct mode:
+#       UI calls http://127.0.0.1:8088/api/... directly (no proxy).
+#
+# Control with:
+#   UI_API_MODE=proxy|direct
+#   UI_API_BASE=http://127.0.0.1:8088
+#
+UI_API_MODE="${UI_API_MODE:-proxy}"
+UI_API_BASE="${UI_API_BASE:-http://127.0.0.1:8088}"
+
+case "$UI_API_MODE" in
+  proxy)
+    # Vite proxy target (vite.config.ts reads process.env.VITE_API_BASE)
+    export VITE_API_BASE="$UI_API_BASE"
+    # Optional: if your App.tsx uses VITE_API_BASE directly and you want it empty in proxy mode,
+    # you can introduce a second variable like VITE_API_PUBLIC_BASE in the UI code.
+    # For now, assume UI uses relative "/api" when VITE_API_BASE is empty.
+    # So we DO NOT force VITE_API_BASE empty here unless you explicitly want it.
+    say "UI API mode: proxy"
+    say "  vite proxy target: VITE_API_BASE=$VITE_API_BASE"
+    ;;
+  direct)
+    # UI will call this directly (App.tsx reads VITE_API_BASE)
+    export VITE_API_BASE="$UI_API_BASE"
+    say "UI API mode: direct"
+    say "  UI will call: VITE_API_BASE=$VITE_API_BASE"
+    ;;
+  *)
+    fail "Invalid UI_API_MODE=$UI_API_MODE (expected: proxy or direct)"
+    ;;
+esac
 
 # ---- Install deps (dev-friendly) ----
 if [ ! -d node_modules ]; then
@@ -45,7 +87,26 @@ say "URL will be shown below (Ctrl+C to stop)"
 HOST_ARG=""
 PORT_ARG=""
 
-[ -n "${UI_DEV_HOST:-}" ] && HOST_ARG="--host $UI_DEV_HOST"
-[ -n "${UI_DEV_PORT:-}" ] && PORT_ARG="--port $UI_DEV_PORT"
+if [ -n "${UI_DEV_HOST:-}" ]; then
+  HOST_ARG="--host"
+  HOST_VAL="$UI_DEV_HOST"
+else
+  HOST_VAL=""
+fi
 
-exec npm run dev -- $HOST_ARG $PORT_ARG
+if [ -n "${UI_DEV_PORT:-}" ]; then
+  PORT_ARG="--port"
+  PORT_VAL="$UI_DEV_PORT"
+else
+  PORT_VAL=""
+fi
+
+# Print final settings
+say "Dev server settings:"
+say "  dir: $UI_DIR"
+say "  host: ${UI_DEV_HOST:-<vite default>}"
+say "  port: ${UI_DEV_PORT:-<vite default>}"
+
+# Exec npm dev
+# shellcheck disable=SC2086
+exec npm run dev -- $HOST_ARG $HOST_VAL $PORT_ARG $PORT_VAL
