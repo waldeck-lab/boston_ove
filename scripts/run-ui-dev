@@ -50,15 +50,11 @@ UI_API_BASE="${UI_API_BASE:-http://127.0.0.1:8088}"
 
 case "$UI_API_MODE" in
   proxy)
-    # Vite proxy target (vite.config.ts reads process.env.VITE_API_BASE)
-    export VITE_API_BASE="$UI_API_BASE"
-    # Optional: if your App.tsx uses VITE_API_BASE directly and you want it empty in proxy mode,
-    # you can introduce a second variable like VITE_API_PUBLIC_BASE in the UI code.
-    # For now, assume UI uses relative "/api" when VITE_API_BASE is empty.
-    # So we DO NOT force VITE_API_BASE empty here unless you explicitly want it.
-    say "UI API mode: proxy"
-    say "  vite proxy target: VITE_API_BASE=$VITE_API_BASE"
-    ;;
+  export VITE_API_BASE=""   # UI uses relative /api
+  say "UI API mode: proxy"
+  say "  UI calls: /api/* (vite proxy)"
+  say "  proxy target: ${UI_API_BASE}"
+  ;;
   direct)
     # UI will call this directly (App.tsx reads VITE_API_BASE)
     export VITE_API_BASE="$UI_API_BASE"

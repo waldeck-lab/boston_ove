@@ -20,6 +20,11 @@ APP="$SERVER_DIR/app.py"
 [ -d "$SERVER_DIR" ] || fail "Server dir not found: $SERVER_DIR"
 [ -f "$APP" ] || fail "Server entrypoint not found: $APP"
 
+# (Do not print values; only show whether set.)
+[ -n "${ARTDATABANKEN_SUBSCRIPTION_KEY:-}" ] || say "WARN: ARTDATABANKEN_SUBSCRIPTION_KEY is not set"
+[ -n "${ARTDATABANKEN_AUTHORIZATION:-}" ]     || say "WARN: ARTDATABANKEN_AUTHORIZATION is not set"
+
+
 # ---- Python ----
 command -v python3 >/dev/null 2>&1 || fail "python3 not found in PATH."
 PY="${PYTHON:-python3}"
