@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 set -e
 
-echo "TEST t001: cleanup derived geomap artifacts"
+echo "TEST t0001: cleanup derived geomap artifacts"
 
 # Required env
 [ -n "${OVE_BASE_DIR:-}" ] || {
@@ -47,6 +47,14 @@ fi
 if [ -e "$LEGACY_TOPSITES" ]; then
   echo "ERROR: cleanup did not remove legacy: $LEGACY_TOPSITES" >&2
   exit 3
+fi
+
+
+#  ensure no year0 slot0 exports remain for any zoom
+if ls "$OUT_DIR"/hotmap_zoom*_year0_slot0.geojson >/dev/null 2>&1; then
+  echo "ERROR: cleanup did not remove some hotmap year0 slot0 exports" >&2
+  ls -1 "$OUT_DIR"/hotmap_zoom*_year0_slot0.geojson >&2 || true
+  exit 4
 fi
 
 echo "OK: cleanup derived completed"
