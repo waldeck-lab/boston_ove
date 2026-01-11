@@ -21,8 +21,9 @@ command -v run_geomap_pipeline >/dev/null 2>&1 || {
 run_geomap_pipeline --n 5 --out-dir "$OUT_DIR"
 
 # Expected outputs (default zoom=15, slot=0)
-HOTMAP="$OUT_DIR/hotmap_zoom15_slot0.geojson"
-TOPSITES="$OUT_DIR/top_sites_zoom15_slot0.csv"
+YEAR="${YEAR:-0}"
+HOTMAP="$OUT_DIR/hotmap_zoom15_year${YEAR}_slot0.geojson"
+TOPSITES="$OUT_DIR/top_sites_zoom15_year${YEAR}_slot0.csv"
 
 # Verify outputs exist and are non-empty
 [ -s "$HOTMAP" ] || {

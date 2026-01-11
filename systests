@@ -1,4 +1,6 @@
 # name					timeout (s)   type   path		command
+t0001-clean-all-derived                 30            0      "boston/t"    	"./t0001-clean-all-derived.sh"
+t0002-clean-exports                     30            0      "boston/t"    	"./t0002-clean-exports.sh"
 t0100-geomap-pipeline-n-5       	500           0      "boston/t"    	"./t0100-geomap-pipeline-n-5.sh"
 t0200-rank-nearby-dalby			30            0      "boston/t"    	"./t0200-rank-nearby-dalby.sh"
-t0201-rank-nearby-stockholm-kista	30            0      "boston/t"    "	./t0201-rank-nearby-stockholm-kista.sh"
+t0201-rank-nearby-stockholm-kista	30            0      "boston/t"         "./t0201-rank-nearby-stockholm-kista.sh"
